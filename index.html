@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>اختبار التقطيع</title>
+<style>
+  body{font-family:"Noto Naskh Arabic",Arial,sans-serif;background:#f5f6fa;color:#111;margin:20px}
+  .box{max-width:650px;margin:auto;background:#fff;padding:16px;border-radius:12px;box-shadow:0 6px 16px rgba(0,0,0,.1)}
+  h1{text-align:center;font-size:22px;margin-bottom:10px}
+  .word{font-size:34px;text-align:center;margin:20px 0;font-weight:bold}
+  .options{display:flex;flex-direction:column;gap:10px;margin:10px 0}
+  .opt{padding:10px;border-radius:8px;border:2px solid #ccc;background:#fafafa;font-size:22px;text-align:center;cursor:pointer}
+  .opt:hover{background:#eef}
+  .opt.correct{border-color:green;color:green;font-weight:bold}
+  .opt.wrong{border-color:red;color:red}
+  .msg{text-align:center;font-size:18px;margin-top:12px;font-weight:bold}
+  .controls{text-align:center;margin-top:16px}
+  button{padding:8px 14px;border:none;border-radius:8px;background:#0b5cff;color:#fff;font-size:16px;cursor:pointer}
+  .score{margin-top:10px;text-align:center;font-size:20px;font-weight:bold}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>اختبار التقطيع</h1>
+  <div id="word" class="word"></div>
+  <div id="options" class="options"></div>
+  <div id="msg" class="msg"></div>
+  <div id="score" class="score"></div>
+  <div class="controls">
+    <button id="nextBtn" onclick="nextWord()">التالي</button>
+  </div>
+</div>
+
+<script>
+const data = [
+  {word:'بَيْتٌ', correct:'بَيْ / تٌ', choices:['بَيْ / تٌ','بَ / يْ / تٌ','بَيْتٌ']},
+  {word:'كُتُبٌ', correct:'كُ / تُ / بٌ', choices:['كُ / تُ / بٌ','كُتُ / بٌ','كُتُبٌ']},
+  {word:'عَلَمٌ', correct:'عَ / لَ / مٌ', choices:['عَ / لَ / مٌ','عَلَ / مٌ','عَلَمٌ']},
+  {word:'شَمْسٌ', correct:'شَمْ / سٌ', choices:['شَمْ / سٌ','شَ / مْسٌ','شَمْسٌ']},
+  {word:'قَمَرٌ', correct:'قَ / مَ / رٌ', choices:['قَ / مَ / رٌ','قَ / مَرٌ','قَمَرٌ']},
+  {word:'نَهْرٌ', correct:'نَهْ / رٌ', choices:['نَ / هْ / رٌ','نَهْ / رٌ','نَهْرٌ']},
+  {word:'جَبَلٌ', correct:'جَ / بَ / لٌ', choices:['جَ / بَ / لٌ','جَبَ / لٌ','جَبَلٌ']},
+  {word:'وَرْدٌ', correct:'وَرْ / دٌ', choices:['وَرْ / دٌ','وَ / رْدٌ','وَرْدٌ']},
+  {word:'بَابٌ', correct:'بَا / بٌ', choices:['بَا / بٌ','بَ / ابٌ','بَابٌ']},
+  {word:'قَلَمٌ', correct:'قَ / لَ / مٌ', choices:['قَ / لَ / مٌ','قَلَ / مٌ','قَلَمٌ']},
+  {word:'رَجُلٌ', correct:'رَ / جُ / لٌ', choices:['رَ / جُ / لٌ','رَجُ / لٌ','رَجُلٌ']},
+  {word:'طَيْرٌ', correct:'طَيْ / رٌ', choices:['طَيْ / رٌ','طَ / يْرٌ','طَيْرٌ']},
+  {word:'مَالٌ', correct:'مَا / لٌ', choices:['مَا / لٌ','مَ / الٌ','مَالٌ']},
+  {word:'نَارٌ', correct:'نَا / رٌ', choices:['نَا / رٌ','نَ / ارٌ','نَارٌ']},
+  {word:'وَقْتٌ', correct:'وَقْ / تٌ', choices:['وَقْ / تٌ','وَ / قْتٌ','وَقْتٌ']},
+  {word:'ذَهَبٌ', correct:'ذَ / هَ / بٌ', choices:['ذَ / هَ / بٌ','ذَهَ / بٌ','ذَهَبٌ']},
+  {word:'نُورٌ', correct:'نُو / رٌ', choices:['نُو / رٌ','نُ / ورٌ','نُورٌ']},
+  {word:'بَحْرٌ', correct:'بَحْ / رٌ', choices:['بَ / حْ / رٌ','بَحْ / رٌ','بَحْرٌ']},
+  {word:'طَرِيقٌ', correct:'طَ / رِي / قٌ', choices:['طَ / رِي / قٌ','طَرِي / قٌ','طَرِيقٌ']},
+  {word:'كِتَابٌ', correct:'كِ / تَا / بٌ', choices:['كِ / تَا / بٌ','كِتَا / بٌ','كِتَابٌ']}
+];
+
+let index=0;
+let score=0;
+
+function showWord(){
+  const item=data[index];
+  document.getElementById("word").textContent=item.word;
+  const opts=document.getElementById("options");
+  opts.innerHTML='';
+  item.choices.forEach(c=>{
+    const btn=document.createElement("div");
+    btn.className="opt";
+    btn.textContent=c;
+    btn.onclick=()=>check(c,btn);
+    opts.appendChild(btn);
+  });
+  document.getElementById("msg").textContent='';
+  updateScore();
+}
+
+function check(choice,el){
+  const item=data[index];
+  const opts=document.querySelectorAll(".opt");
+  opts.forEach(o=>o.onclick=null);
+  if(choice===item.correct){
+    el.classList.add("correct");
+    document.getElementById("msg").textContent="صحيح ✅";
+    document.getElementById("msg").style.color="green";
+    score++;
+  } else {
+    el.classList.add("wrong");
+    document.getElementById("msg").textContent="خطأ ❌ الصحيح: "+item.correct;
+    document.getElementById("msg").style.color="red";
+  }
+  updateScore();
+}
+
+function updateScore(){
+  document.getElementById("score").textContent="العلامة: "+score+" / "+data.length;
+}
+
+function nextWord(){
+  index++;
+  if(index>=data.length){
+    document.getElementById("word").textContent="انتهى الاختبار 🙂";
+    document.getElementById("options").innerHTML='';
+    document.getElementById("msg").textContent='';
+    updateScore();
+    document.getElementById("nextBtn").style.display="none";
+  } else showWord();
+}
+
+showWord();
+</script>
+</body>
+</html>
